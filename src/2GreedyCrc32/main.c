@@ -25,9 +25,13 @@ int main(int argc, char** argv) {
     uint64_t findedCounter = 0;
     lastWordIdx = 0;
 
+    struct word* words = calloc(500000, sizeof(struct word));
     for (uint64_t curChar = 0; curChar < findText->size; curChar ++) {
         if (isspace(findText->data[curChar])) {
+            words[findCounter].data   = findText->data + lastWordIdx;
+            words[findCounter].length = curChar - lastWordIdx;
             findCounter++;
+
             findText->data[curChar] = '\0';
             List* find = findHT(myHT, findText->data + lastWordIdx, curChar - lastWordIdx);
 
@@ -42,6 +46,12 @@ int main(int argc, char** argv) {
             
             lastWordIdx = curChar;
         }   
+    }
+
+    for (uint32_t curFindIter = 0; curFindIter < 200; curFindIter++) {
+        for (uint32_t curWord = 0; curWord < findCounter; curWord++) {
+            findHT(myHT, words[curWord].data, words[curWord].length);
+        }
     }
 
     printf("All word amount is %lu\n"

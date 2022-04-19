@@ -5,12 +5,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <immintrin.h>
 
 typedef struct list {
     char* key;
 
     struct list* next;
 } List;
+
+int32_t myStrcmp(char* str1, char* str2);
 
 struct list* list_new(char* key);
 struct list* list_insert(struct list* head, char* key);
@@ -22,6 +25,5 @@ struct list* list_insert_before(struct list *head, struct list *where, struct li
 struct list* list_delete(struct list* head);
 struct list* list_next(struct list *curr);
 void list_print(struct list const *head);
-
 
 #endif

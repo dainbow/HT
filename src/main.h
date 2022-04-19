@@ -4,6 +4,13 @@
 #include "List.h"
 
 const uint32_t HT_CAPACITY = 15013;
+const uint32_t WORD_LENGTH = 32;
+
+struct word {
+    char* data;
+    
+    uint32_t length;
+};
 
 typedef struct text {
     char* data;

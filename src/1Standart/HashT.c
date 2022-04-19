@@ -2,7 +2,7 @@
 
 #define H H6
 
-uint32_t H6(char* s, uint32_t hashsize) {
+uint32_t __attribute__ ((noinline)) H6(char* s, uint32_t hashsize) {
     uint32_t hash = 0;
 
     while (*s) {

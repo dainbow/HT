@@ -16,18 +16,18 @@ typedef struct hashT {
     uint32_t capacity;
 } HashT;
 
-uint32_t H1(char* s, uint32_t hashsize, uint32_t stringSize);
-uint32_t H2(char* s, uint32_t hashsize, uint32_t stringSize);
-uint32_t H3(char* s, uint32_t hashsize, uint32_t stringSize);
-uint32_t H4(char* s, uint32_t hashsize, uint32_t stringSize);
-uint32_t H5(char* s, uint32_t hashsize, uint32_t stringSize);
-uint32_t H6(char* s, uint32_t hashsize, uint32_t stringSize);
+uint32_t H1(char* s, uint32_t hashsize);
+uint32_t H2(char* s, uint32_t hashsize);
+uint32_t H3(char* s, uint32_t hashsize);
+uint32_t H4(char* s, uint32_t hashsize);
+extern uint32_t H5(char* s, uint32_t hashsize);
+uint32_t H6(char* s, uint32_t hashsize);
 
 struct hashT* newHT(uint64_t capacity);
-List* findHT(struct hashT* hT, char* key, uint32_t value);
+List* findHT(struct hashT* hT, char* key);
 
-int32_t insertHT(struct hashT* hT, char* key, uint32_t value);
-void eraseHT(struct hashT* hT, char* key, uint32_t value);
+int32_t insertHT(struct hashT* hT, char* key);
+void eraseHT(struct hashT* hT, char* key);
 
 struct hashT* deleteHT(struct hashT* hT);
 

@@ -1,5 +1,12 @@
 #include "List.h"
 
+int32_t myStrcmp(char* str1, char* str2) {
+    __m256i string1 = _mm256_load_si256((const __m256i*)str1);
+    __m256i string2 = _mm256_load_si256((const __m256i*)str2);
+
+    return ~_mm256_movemask_epi8(_mm256_cmpeq_epi8(string1, string2));
+}
+
 struct list* list_new(char* key) {
     struct list* newList = (struct list*)calloc(1, sizeof(struct list));
     if (newList == NULL)
@@ -34,7 +41,7 @@ struct list* list_find (struct list* head, char* key) {
     }
 
     for (;;) {
-        if (strcmp(head->key, key) == 0)
+        if (myStrcmp(head->key, key) == 0)
             return head;
 
         if (head->next != NULL)
@@ -50,7 +57,7 @@ struct list* list_erase (struct list* head, char* key) {
     if (head == NULL)
         return NULL;
 
-    if (strcmp(head->key, key)) {
+    if (myStrcmp(head->key, key)) {
         struct list* nodeToRet = head->next;
         
         free(head->key);
@@ -61,7 +68,7 @@ struct list* list_erase (struct list* head, char* key) {
     struct list* rememberHead = head;
 
     while (head->next != NULL) {
-        if (strcmp(head->next->key, key)) {
+        if (myStrcmp(head->next->key, key)) {
             struct list* listToDel  = head->next;
             head->next              = head->next->next;
 

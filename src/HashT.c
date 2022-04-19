@@ -2,67 +2,49 @@
 
 #define H H6
 
-uint32_t H1(char* s, uint32_t hashsize, uint32_t stringSize) {
+uint32_t H1(char* s, uint32_t hashsize) {
     return 1 % hashsize;
 }
 
-uint32_t H2(char* s, uint32_t hashsize, uint32_t stringSize) {
+uint32_t H2(char* s, uint32_t hashsize) {
     return s[0] % hashsize;
 }
 
-uint32_t H3(char* s, uint32_t hashsize, uint32_t stringSize) {
+uint32_t H3(char* s, uint32_t hashsize) {
     uint32_t sum = 0;
-
-    while(*s) {
-        sum += *s++;
-    }
+    __asm__ __volatile__ (".intel_syntax noprefix;"
+            "push %1;"
+            "mov ecx, 32;"
+            "xor eax, eax;"
+            "lop%=:"
+            "cmp ecx, 0;"
+            "je end%=;"
+            "add eax, [%1];"
+            "inc %1;"
+            "dec ecx;"
+            "jmp lop%=;"
+            "end%=:"
+            "mov %0, eax;"
+            "pop %1;"
+            ".att_syntax prefix;"
+            : "=r" (sum)
+            : "r" (s)
+            : "ecx", "eax");
 
     return sum % hashsize;
 }
 
-uint32_t H4(char* s, uint32_t hashsize, uint32_t stringSize) {
-    return stringSize % hashsize;
+uint32_t H4(char* s, uint32_t hashsize) {
+    return strlen(s) % hashsize;
 }
 
-uint32_t H5(char* s, uint32_t hashsize, uint32_t stringSize) {
-    uint32_t hash = *s++;
-
-    while (*s) {
-        hash = (hash >> 31) + (hash << 1) + *s++;
-    }
-
-    return hash % hashsize;
-}
-
-uint32_t H6(char* s, uint32_t hashsize, uint32_t stringSize) {
+uint32_t H6(char* s, uint32_t hashsize) {
     uint32_t hash = 0;
 
-    while (stringSize >> 3) {
+    for (uint32_t curPart = 0; curPart < 4; curPart++) {
         hash = _mm_crc32_u64(hash, *((uint64_t*)s));
 
         s += 8;
-        stringSize -= 8;
-    }
-
-    if (stringSize >> 2) {
-        hash = _mm_crc32_u32(hash, *((uint32_t*)s));
-
-        s += 4;
-        stringSize -= 4;
-    }
-
-    if (stringSize >> 1) {
-        hash = _mm_crc32_u16(hash, *((uint16_t*)s));
-
-        s += 2;
-        stringSize -= 2;
-    }
-
-    if (stringSize) {
-        hash = _mm_crc32_u8(hash, *s);
-
-        s++;
-        stringSize--;
     }
 
     return hash % hashsize;
@@ -85,32 +67,33 @@ struct hashT* newHT(uint64_t capacity) {
     return h;
 }
 
-List* findHT(struct hashT* hT, char* key, uint32_t value) {
+List* findHT(struct hashT* hT, char* key) {
     assert(hT != NULL);
 
-    uint32_t keyHash = H(key, hT->capacity, value);
+    uint32_t keyHash = H(key, hT->capacity);
     List* findedList = list_find(hT->data[keyHash], key);
 
     return findedList; 
 }
 
-int32_t insertHT(struct hashT* hT, char* key, uint32_t value) {
+int32_t insertHT(struct hashT* hT, char* key) {
     assert(hT != NULL);
 
-    uint32_t keyHash  = H(key, hT->capacity, value);
-    
+    uint32_t keyHash  = H(key, hT->capacity);
+
     if (list_find(hT->data[keyHash], key) == NULL) {
         hT->data[keyHash] = list_insert(hT->data[keyHash], key);
 
         return 1;
     }
+
     return 0;
 }
 
-void eraseHT(struct hashT* hT, char* key, uint32_t value) {
+void eraseHT(struct hashT* hT, char* key) {
     assert(hT != NULL);
 
-    uint32_t keyHash  = H(key, hT->capacity, value);
+    uint32_t keyHash  = H(key, hT->capacity);
     hT->data[keyHash] = list_erase(hT->data[keyHash], key);
 }
 

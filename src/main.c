@@ -4,73 +4,70 @@ int main(int argc, char** argv) {
     HashT* myHT = newHT(HT_CAPACITY);
     Text* inputText = CreateText(argv[1]);
     
-    const __m256i spaces   = _mm256_set_epi8(' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ');
-    const __m256i newLines = _mm256_set_epi8('\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n', '\n');
-    
     uint64_t lastWordIdx = 0;
     uint64_t wordCounter = 0;
-    for (uint64_t curChar = 0; curChar < inputText->size; curChar += 32) {
-        int32_t mask      = 0;
-        __m256i curArr = _mm256_loadu_si256((const __m256i*)(inputText->data + curChar));
+    for (uint64_t curChar = 0; curChar < inputText->size; curChar++) {
+        if (isspace(inputText->data[curChar])) {
+            inputText->data[curChar] = '\0';
 
-        mask |= _mm256_movemask_epi8(_mm256_cmpeq_epi8(curArr, spaces));
-        mask |= _mm256_movemask_epi8(_mm256_cmpeq_epi8(curArr, newLines));
-    
-        while (mask) {
-            uint32_t nowChar = curChar + fastLog2((mask & (mask - 1)) ^ mask);
-            mask = mask & (mask - 1);
+            char* wordBuffer = aligned_alloc(32, WORD_LENGTH * sizeof(char));
+            memset(wordBuffer, 0, WORD_LENGTH);
+            memmove(wordBuffer, inputText->data + lastWordIdx, curChar - lastWordIdx);
 
-            if (nowChar != (lastWordIdx)) {
-                inputText->data[nowChar] = '\0';
-                wordCounter += insertHT(myHT, inputText->data + lastWordIdx, nowChar - lastWordIdx);
-                // printf("%s\n", inputText->data + lastWordIdx);
+            wordCounter += insertHT(myHT, wordBuffer);
+            // printf("%s\n", inputText->data + lastWordIdx);
 
-                lastWordIdx = nowChar;
+            while (isspace(inputText->data[++curChar])) {
+                ;
             }
 
-            lastWordIdx++;
+            lastWordIdx = curChar;
         }
     }
+    inputText = DeleteText(inputText);
 
     Text* findText = CreateText(argv[2]);
     uint64_t findCounter   = 0;
     uint64_t findedCounter = 0;
     lastWordIdx = 0;
 
-    for (uint64_t curChar = 0; curChar < findText->size; curChar += 32) {
-        int32_t mask      = 0;
-        __m256i curArr = _mm256_loadu_si256((const __m256i*)(findText->data + curChar));
+    char** words = calloc(500000, sizeof(char*));
+    for (uint64_t curChar = 0; curChar < findText->size; curChar ++) {
+        if (isspace(findText->data[curChar])) {
+            findText->data[curChar] = '\0';
 
-        mask |= _mm256_movemask_epi8(_mm256_cmpeq_epi8(curArr, newLines));
+            words[findCounter] = aligned_alloc(32, WORD_LENGTH * sizeof(char));
+            memset(words[findCounter], 0, WORD_LENGTH);
+            memcpy(words[findCounter], findText->data + lastWordIdx, curChar - lastWordIdx);
 
-        while (mask) {
-            uint32_t nowChar = curChar + fastLog2((mask & (mask - 1)) ^ mask);
-            mask = mask & (mask - 1);
+            List* find = findHT(myHT, words[findCounter++]);
 
-            if (nowChar != (lastWordIdx)) {
-                findCounter++;
-                findText->data[nowChar] = '\0';
-                List* find = findHT(myHT, findText->data + lastWordIdx, nowChar - lastWordIdx);
-
-                if (find) {
-                    // printf("FOUND %s\n", find->key);
-                    findedCounter++;
-                }
-
-                
-                lastWordIdx = nowChar;
+            if (find) {
+                // printf("FOUND %s\n", find->key);
+                findedCounter++;
             }
 
-            lastWordIdx++;
+            while (isspace(findText->data[++curChar])) {
+                ;
+            }
+            
+            lastWordIdx = curChar;
+        }   
+    }
+
+    for (uint32_t curFindIter = 0; curFindIter < 100; curFindIter++) {
+        for (uint32_t curWord = 0; curWord < findCounter; curWord++) {
+            findHT(myHT, words[curWord]);
         }
     }
+
     printf("All word amount is %lu\n"
            "Word to find amount is %lu\n"
            "Founded words amount is %lu\n", wordCounter, findCounter, findedCounter);
 
     
     myHT      = deleteHT(myHT);
-    inputText = DeleteText(inputText);
+    
     findText  = DeleteText(findText);
 }
 
@@ -101,10 +98,11 @@ Text* DeleteText(Text* textToDel) {
     return NULL;
 }
 
-uint32_t __attribute__ ((noinline)) fastLog2(uint32_t number) {
-    __asm(".intel_syntax noprefix\n\t"
-          "bsr eax, edi\n\t"
-          "pop rbp\n\t"
-          "ret\n\t"
-          ".att_syntax prefix\n\t");
+uint32_t fastLog2(uint32_t number) {
+    for (uint32_t curDigit = 0; curDigit < 32; curDigit++) {
+        if (number == ((uint32_t)1 << curDigit))
+            return curDigit;
+    }
+
+    return 228;
 }

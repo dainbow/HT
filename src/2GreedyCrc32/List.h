@@ -23,5 +23,4 @@ struct list* list_delete(struct list* head);
 struct list* list_next(struct list *curr);
 void list_print(struct list const *head);
 
-
 #endif

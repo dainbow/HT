@@ -10,8 +10,7 @@ int main(int argc, char** argv) {
         if (isspace(inputText->data[curChar])) {
             inputText->data[curChar] = '\0';
             wordCounter += insertHT(myHT, inputText->data + lastWordIdx);
-            // printf("%s\n", inputText->data + lastWordIdx);
-
+    
             while (isspace(inputText->data[++curChar])) {
                 ;
             }
@@ -25,23 +24,26 @@ int main(int argc, char** argv) {
     uint64_t findedCounter = 0;
     lastWordIdx = 0;
 
+    char** words = calloc(500000, sizeof(char*));
     for (uint64_t curChar = 0; curChar < findText->size; curChar ++) {
         if (isspace(findText->data[curChar])) {
-            findCounter++;
+            words[findCounter++] = findText->data + lastWordIdx;
             findText->data[curChar] = '\0';
             List* find = findHT(myHT, findText->data + lastWordIdx);
 
-            if (find) {
-                // printf("FOUND %s\n", find->key);
-                findedCounter++;
-            }
+            findedCounter += (find != NULL);
 
             while (isspace(findText->data[++curChar])) {
                 ;
             }
-            
             lastWordIdx = curChar;
         }   
+    }
+
+    for (uint32_t curFindIter = 0; curFindIter < 200; curFindIter++) {
+        for (uint32_t curWord = 0; curWord < findCounter; curWord++) {
+            findHT(myHT, words[curWord  ]);
+        }
     }
 
     printf("All word amount is %lu\n"

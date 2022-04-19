@@ -5,6 +5,12 @@
 
 const uint32_t HT_CAPACITY = 15013;
 
+struct word {
+    char* data;
+    
+    uint32_t length;
+};
+
 typedef struct text {
     char* data;
 

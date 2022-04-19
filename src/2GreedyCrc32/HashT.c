@@ -34,7 +34,7 @@ uint32_t H5(char* s, uint32_t hashsize, uint32_t stringSize) {
     return hash % hashsize;
 }
 
-uint32_t H6(char* s, uint32_t hashsize, uint32_t stringSize) {
+uint32_t __attribute__ ((noinline)) H6(char* s, uint32_t hashsize, uint32_t stringSize) {
     uint32_t hash = 0;
 
     while (stringSize >> 3) {
